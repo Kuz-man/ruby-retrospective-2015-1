@@ -1,12 +1,7 @@
-class Card
-  attr_reader :rank, :suit
+module CardOperations
   SUITES = [:spades, :hearts, :diamonds, :clubs]
   RANKS = [:ace, :king, :queen, :jack, 10, 9, 8, 7, 6, 5, 4, 3, 2]
   BELOTE_RANKS = [:ace, 10, :king, :queen, :jack, 9, 8, 7]
-  def initialize(rank, suit)
-    @rank = rank
-    @suit = suit
-  end
 
   def rank_to_i
     RANKS.each.with_index { |rate, index| return index if rank == rate }
@@ -18,10 +13,6 @@ class Card
 
   def suit_to_i
     SUITES.each.with_index { |set, index| return index if suit == set }
-  end
-
-  def to_s
-    return "#{rank.to_s.capitalize} of #{suit.capitalize}"
   end
 
   def ==(other_card)
@@ -50,9 +41,19 @@ class Card
   end
 end
 
+class Card < Struct.new(:rank, :suit)
+  include CardOperations
+
+  def to_s
+    return "#{rank.to_s.capitalize} of #{suit.capitalize}"
+  end
+end
+
 class Deck
   attr_reader :card_array
+
   include Enumerable
+
   SUITES = [:spades, :hearts, :diamonds, :clubs]
   RANKS = [:ace, :king, :queen, :jack, 10, 9, 8, 7, 6, 5, 4, 3, 2]
 
@@ -107,6 +108,7 @@ end
 
 class WarDeck < Deck
   attr_reader :card_array
+
   SUITES = [:spades, :hearts, :diamonds, :clubs]
   RANKS = [:ace, :king, :queen, :jack, 10, 9, 8, 7, 6, 5, 4, 3, 2]
 
@@ -134,6 +136,7 @@ end
 
 class BeloteDeck < Deck
   attr_reader :card_array
+
   SUITES = [:spades, :hearts, :diamonds, :clubs]
   RANKS = [:ace, 10, :king, :queen, :jack, 9, 8, 7]
 
@@ -203,6 +206,7 @@ end
 
 class SixtySixDeck < Deck
   attr_reader :card_array
+
   SUITES = [:spades, :hearts, :diamonds, :clubs]
   RANKS = [:ace, 10, :king, :queen, :jack, 9]
 
@@ -220,9 +224,8 @@ class SixtySixDeck < Deck
 
   def twenty?(trump_suit)
     not_trump = SUITES - [trump_suit]
-    not_trump.each do |set|
-      king, queen = Card.new(:king, set), Card.new(:queen, set)
-      return true if card_array.member?(king) and card_array.member?(queen)
+    return true if not_trump.any? do |set|
+      forty?(set)
     end
     false
   end
