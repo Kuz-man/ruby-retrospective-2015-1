@@ -1,12 +1,15 @@
 class Integer
   def prime?
     return false if self == 1
-    2.upto((self**0.5).floor).each { |item| return false if self % item == 0 }
+    2.upto((self**0.5).floor).each do |number|
+      return false if self % number == 0
+    end
     true
   end
 end
 
 class RationalSequence
+  attr_reader :limit
   include Enumerable
 
   def initialize(limit)
@@ -14,26 +17,25 @@ class RationalSequence
   end
 
   def each
-    temp_array = []
-    result_array = []
-    2.upto(100).select { |sum| temp_array << produce_rats(sum) }
-    temp_array = temp_array.flatten & temp_array.flatten
-    result_array = temp_array.select { |item| item }.take(@limit).to_a
-    result_array.each { |item| yield item }
-  end
-
-  def produce_rats(sum)
-    result_array = []
-    if sum.odd?
-      1.upto(sum - 1).each { |i| result_array << (sum - i) / i.to_r }
-    else
-      1.upto(sum - 1).each { |i| result_array << i / (sum - i).to_r }
+    numerator = 1
+    counter = 0
+    sum = 2
+    while counter < limit
+      if numerator.gcd(sum - numerator) == 1
+        yield Rational(numerator, sum - numerator)
+        counter += 1
+      end
+      if (sum.even? and numerator == sum - 1) or (sum.odd? and numerator == 1)
+        sum += 1
+        numerator = sum * (sum % 2)
+      end
+      sum.even? ? numerator += 1 : numerator += -1
     end
-    result_array
   end
 end
 
 class PrimeSequence
+  attr_reader :limit
   include Enumerable
 
   def initialize(limit)
@@ -41,12 +43,16 @@ class PrimeSequence
   end
 
   def each
-    result_array = 1.upto(Float::INFINITY).lazy.select { |item| item.prime? }.take(@limit).to_a
+    result_array = []
+    result_array = 1.upto(Float::INFINITY).lazy.select do |item|
+      item.prime?
+    end.take(limit).to_a
     result_array.each { |item| yield item }
   end
 end
 
 class FibonacciSequence
+  attr_reader :limit, :first, :second
   include Enumerable
 
   def initialize(limit, first: 1, second: 1)
@@ -56,9 +62,9 @@ class FibonacciSequence
   end
 
   def each
-    previous, current = @first, @second
+    previous, current = first, second
     count = 0
-    while count < @limit
+    while count < limit
       yield previous
       current, previous = current + previous, current
       count += 1
@@ -83,7 +89,6 @@ module DrunkenMathematician
   end
 
   def aimless(count)
-    return 0 if count == 0
     all_primes = []
     rats = []
     PrimeSequence.new(count).each { |item| all_primes << item }
@@ -93,10 +98,8 @@ module DrunkenMathematician
   end
 
   def worthless(count)
-    return {} if count == 0
-    return [(1 / 1.to_r)] if count == 2
     rat_cage = []
-    nth_fibonacci = (FibonacciSequence.new(count).to_a - FibonacciSequence.new(count - 1).to_a)[0]
+    nth_fibonacci = FibonacciSequence.new(count).to_a.last
     all_rats = RationalSequence.new(count * count)
     all_rats.take_while do |rat|
       rat_cage << rat
