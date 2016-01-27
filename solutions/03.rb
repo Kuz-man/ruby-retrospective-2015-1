@@ -80,30 +80,28 @@ module DrunkenMathematician
   end
 
   def meaningless(count)
-    all_rats = []
     return 1 if count == 0
-    return (1 / 1).to_r if count == 1
-    RationalSequence.new(count).each { |item| all_rats << item }
-    array_prime = all_rats.find_all { |item| item.numerator.prime? or item.denominator.prime?}
+    return 1.to_r if count == 1
+    all_rats = RationalSequence.new(count).to_a
+    array_prime = all_rats.find_all do |item|
+      item.numerator.prime? or item.denominator.prime?
+    end
     array_prime.reduce(:*) / (all_rats - array_prime).reduce(:*)
   end
 
   def aimless(count)
-    all_primes = []
-    rats = []
-    PrimeSequence.new(count).each { |item| all_primes << item }
-    all_primes << 1 unless all_primes.length.even?
-    all_primes.each_slice(2) { |item| rats << item[0] / item[1].to_r }
-    rats.reduce(:+)
+    all_primes = PrimeSequence.new(count).to_a
+    all_primes.each_slice(2).map do |numerator, denominator|
+      Rational(numerator, denominator || 1)
+    end.reduce(:+)
   end
 
   def worthless(count)
     rat_cage = []
     nth_fibonacci = FibonacciSequence.new(count).to_a.last
-    all_rats = RationalSequence.new(count * count)
-    all_rats.take_while do |rat|
+    RationalSequence.new(count * count).take_while do |rat|
       rat_cage << rat
-      rat_cage.reduce(0, :+) <= nth_fibonacci
+      rat_cage.reduce(:+) <= nth_fibonacci
     end
   end
 end
